@@ -74,28 +74,14 @@ func (sl *SkipList) length() int {
 func (sl *SkipList) randomLevels() int {
 	lvl := 1
 	rand.Seed(time.Now().UnixNano())
-	// vraca int32 u opsegu [0,2) tj ili 0 ili 1
-	for ; rand.Int31n(2) == 1; lvl++ {
+	
+	for ; rand.Int31n(2) == 1; lvl++ {    // vraca int32 u opsegu [0,2) tj ili 0 ili 1
 	}
 	if lvl > sl.level {
 		sl.level = sl.level+1
 		lvl = sl.level
 	}
 	return lvl
-
-	/*for ; rand.Int31n(2) == 1; level++ {
-		if level > sl.level {
-			sl.level = level
-			fmt.Println(sl.level)
-			fmt.Printf("konacan level insertovanog cvora:")
-			fmt.Println(level)
-			return level
-		}
-	}
-	fmt.Println(sl.level)
-	fmt.Printf("konacan level insertovanog cvora:")
-	fmt.Println(level)
-	return level*/
 }
 
 func (sl *SkipList) find(key string) *Node{
