@@ -117,7 +117,6 @@ func (sl *SkipList) insert(key string, value []byte) bool {
 	}
 	// ako node ne postoji u skip listi, vrsi se dodavanje
 	lvl := sl.randomLevels()
-	fmt.Println(lvl)
 	now := time.Now()
 	timestamp := now.Unix()
 	node = newNode(key, value, lvl+1, timestamp)
