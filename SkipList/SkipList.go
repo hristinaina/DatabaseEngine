@@ -122,7 +122,7 @@ func (sl *SkipList) insert(key string, value []byte) bool {
 	timestamp := now.Unix()
 	node = newNode(key, value, lvl+1, timestamp)
 
-	// na svakom nivou treba prepaviti pokazivace (da prethodni ukazuje na node i node na sljedeci)
+	// na svakom nivou treba prepraviti pokazivace (da prethodni ukazuje na node i node na sljedeci)
 	previous := sl.getPrevious(key, lvl)
 	for i := 0; i < lvl; i++ {
 		node.next[i] = previous[i].next[i]
@@ -151,7 +151,7 @@ func (sl *SkipList) getPrevious(key string, lvl int) []*Node {
 	return previous
 }
 
-// fizicko brisanje - element se zaprave brise iz skipListe
+// fizicko brisanje - element se uklanja iz skipListe
 func (sl *SkipList) removePh(key string) bool {
 	node := sl.find(key)
 	if node == nil {
@@ -161,7 +161,7 @@ func (sl *SkipList) removePh(key string) bool {
 	previous := sl.getPrevious(key, len(node.next))
 	for i := len(previous)-2; i >= 0; i-- {
 		if sl.head.next[i] == nil{
-			// jer treba ukloniti suvisne nivoe
+			// treba ukloniti suvisne nivoe
 			sl.level = sl.level - 1
 		}else {
 			previous[i].next[i] = node.next[i]
