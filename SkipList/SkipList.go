@@ -90,7 +90,7 @@ func (sl *SkipList) Find(key string) *Node{
 		for ; curr.next[i] != nil; curr = curr.next[i] {
 			if curr.next[i].key > key {
 				break
-			} else if curr.next[i].key == key{
+			} else if curr.next[i].key == key && curr.next[i].tombstone == false{
 				return curr.next[i]
 			}
 		}
