@@ -41,7 +41,7 @@ func Hash(data []byte) [20]byte {
 
 // Serialization main func for file witting
 func (n *NodeMerkle) Serialization(){
-	file, err := os.OpenFile("Data/metadata.txt", os.O_WRONLY|os.O_CREATE, 0777)
+	file, err := os.OpenFile("Data/metadata1.txt", os.O_WRONLY|os.O_CREATE, 0777)
 	//file, err := os.OpenFile("Data/proba.db", os.O_WRONLY|os.O_CREATE, 0777)
 	defer func(file *os.File) {
 		err := file.Close()
@@ -75,7 +75,7 @@ func (n *NodeMerkle) PreorderSerialisation(file *os.File) {
 
 func Deserialization()  {
 	//file, err := os.OpenFile("Data/proba.db", os.O_RDONLY|os.O_CREATE, 0777)
-	file, err := os.OpenFile("Data/metadata.txt", os.O_RDONLY|os.O_CREATE, 0777)
+	file, err := os.OpenFile("Data/metadata1.txt", os.O_RDONLY|os.O_CREATE, 0777)
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
@@ -143,9 +143,9 @@ func main() {
 	newNodes := MakeNodesForMerkle(nodes)
 
 	r := NewMerkleTree(newNodes)
-	fmt.Println(r.root.value)
-	fmt.Println(r.root.left.value)
-	fmt.Println(r.root.right.value)
+	//fmt.Println(r.Root.value)
+	//fmt.Println(r.Root.left.value)
+	//fmt.Println(r.Root.right.value)
 	r.Root.Serialization()
 	Deserialization()
 }
