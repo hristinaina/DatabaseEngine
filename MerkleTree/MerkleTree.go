@@ -10,11 +10,11 @@ import (
 )
 
 type MerkleRoot struct {
-	root *NodeMerkle
+	Root *NodeMerkle
 }
 
 func (mr *MerkleRoot) String() string{
-	return mr.root.String()
+	return mr.Root.String()
 }
 
 type Node struct {
@@ -119,7 +119,7 @@ func MakeNodes(parts []NodeMerkle) []NodeMerkle {
 
 func NewMerkleTree(parts []NodeMerkle) *MerkleRoot {
 	elems := MakeNodes(parts)
-	return &MerkleRoot{root: &elems[0]}
+	return &MerkleRoot{Root: &elems[0]}
 }
 
 // MakeNodesForMerkle converting nodes from skip list to the new format for merkle
@@ -146,7 +146,7 @@ func main() {
 	fmt.Println(r.root.value)
 	fmt.Println(r.root.left.value)
 	fmt.Println(r.root.right.value)
-	r.root.Serialization()
+	r.Root.Serialization()
 	Deserialization()
 }
 
