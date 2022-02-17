@@ -227,6 +227,14 @@ func main() {
 	fmt.Println(" ")
 	sl.PrintSL()
 
+	node = sl.Find("2")
+	fmt.Println(node)
+
+	sl.RemoveLog("3")
+
+	sl.Insert("2", []byte("poyyy"))
+	sl.PrintSL()
+
 	fmt.Println(" ")
 	sl.RemovePh("4")
 	sl.PrintSL()
