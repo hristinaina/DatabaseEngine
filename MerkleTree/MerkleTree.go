@@ -10,7 +10,7 @@ import (
 )
 
 type MerkleRoot struct {
-	root *Node
+	root *NodeMerkle
 }
 
 func (mr *MerkleRoot) String() string{
@@ -18,20 +18,29 @@ func (mr *MerkleRoot) String() string{
 }
 
 type Node struct {
-	data []byte
-	left *Node
-	right *Node
+	key       string
+	value     []byte
+	timestamp int64
+	tombstone bool
+	next      []*Node
 }
 
-func (n *Node) String() string {
-	return hex.EncodeToString(n.data[:])
+type NodeMerkle struct {
+	value []byte
+	left  *NodeMerkle
+	right *NodeMerkle
+}
+
+func (n *NodeMerkle) String() string {
+	return hex.EncodeToString(n.value[:])
 }
 
 func Hash(data []byte) [20]byte {
 	return sha1.Sum(data)
 }
 
-func (n *Node) Serialization(){
+// Serialization main func for file witting
+func (n *NodeMerkle) Serialization(){
 	file, err := os.OpenFile("Data/metadata.txt", os.O_WRONLY|os.O_CREATE, 0777)
 	//file, err := os.OpenFile("Data/proba.db", os.O_WRONLY|os.O_CREATE, 0777)
 	defer func(file *os.File) {
@@ -46,8 +55,9 @@ func (n *Node) Serialization(){
 	n.PreorderSerialisation(file)
 }
 
-func (n *Node) PreorderSerialisation(file *os.File) {
-	fmt.Println(n.data)
+// PreorderSerialisation helper func for file witting
+func (n *NodeMerkle) PreorderSerialisation(file *os.File) {
+	fmt.Println(n.value)
 	file.Write([]byte(n.String()))
 	file.Write([]byte(";"))
 	if n.left != nil {
@@ -60,7 +70,7 @@ func (n *Node) PreorderSerialisation(file *os.File) {
 	//if not self.is_empty():
 	//for c in x.children:
 	//  self.postorder(c)
-	//  print(x.data)
+	//  print(x.value)
 }
 
 func Deserialization()  {
@@ -81,21 +91,23 @@ func Deserialization()  {
 	//fmt.Println(nodes)
 }
 
-func MakeNodes(parts []Node) []Node {
-	next_gen := []Node{}
+
+// MakeNodes func that makes the upper levels of the three
+func MakeNodes(parts []NodeMerkle) []NodeMerkle {
+	next_gen := []NodeMerkle{}
 	if len(parts) % 2 == 1{
-		parts = append(parts, Node{data: []byte("")})
+		parts = append(parts, NodeMerkle{value: []byte("")})
 	}
 	counter := 0 //da bi znali dokle smo stigli
 	for len(parts) > counter {
 		currentParents := parts[counter:counter + 2]
 		left := currentParents[0]
 		right := currentParents[1]
-		childrenVal := append(left.data[:], right.data[:]...)
+		childrenVal := append(left.value[:], right.value[:]...)
 		hashVal := Hash(childrenVal)
-		if len(right.data) == 0{
-			next_gen = append(next_gen, Node{data: hashVal[:], left: &left, right: nil})
-		}else {next_gen = append(next_gen, Node{data: hashVal[:], left: &left, right: &right})}
+		if len(right.value) == 0{
+			next_gen = append(next_gen, NodeMerkle{value: hashVal[:], left: &left, right: nil})
+		}else {next_gen = append(next_gen, NodeMerkle{value: hashVal[:], left: &left, right: &right})}
 		counter += 2
 	}
 	if len(next_gen) == 1 {
@@ -105,25 +117,37 @@ func MakeNodes(parts []Node) []Node {
 	}
 }
 
-func NewMerkleTree(parts []Node) *MerkleRoot {
+func NewMerkleTree(parts []NodeMerkle) *MerkleRoot {
 	elems := MakeNodes(parts)
 	return &MerkleRoot{root: &elems[0]}
+}
+
+// MakeNodesForMerkle converting nodes from skip list to the new format for merkle
+func MakeNodesForMerkle(nodes []Node) []NodeMerkle {
+	merkleNodes := []NodeMerkle{}
+	for i := 0; i < len(nodes); i++ {
+		merkleNodes = append(merkleNodes, NodeMerkle{value: nodes[i].value, left: nil, right: nil})
+	}
+	return merkleNodes
 }
 
 func main() {
 	fmt.Println([]byte(""))
 	nodes := []Node{
-		{data: []byte("a"), left: nil, right: nil},
-		{data:[]byte("b"), left: nil, right: nil},
-		{data:[]byte("c"), left: nil, right: nil},
-		{data:[]byte("d"), left: nil, right: nil},
-		{data:[]byte("e"), left: nil, right: nil},
+		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
+		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
+		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
+		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
+		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
 	}
+	newNodes := MakeNodesForMerkle(nodes)
 
-	r := NewMerkleTree(nodes)
-	fmt.Println(r.root.data)
-	fmt.Println(r.root.left.data)
-	fmt.Println(r.root.right.data)
+	r := NewMerkleTree(newNodes)
+	fmt.Println(r.root.value)
+	fmt.Println(r.root.left.value)
+	fmt.Println(r.root.right.value)
 	r.root.Serialization()
 	Deserialization()
 }
+
+
