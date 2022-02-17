@@ -104,11 +104,11 @@ func (sl *SkipList) Contains(key string) bool {
 
 func (sl *SkipList) Insert(key string, value []byte) bool {
 	node := sl.Find(key)
-	// ako node postoji bilo da je logicki obrisan ili ne - vrsi se AZURIRANJE
+	// ako node postoji u skip listi, vrsi se AZURIRANJE
 	if node != nil{
-		if node.tombstone == true{  // ako je bio logicki obrisan
-			sl.len ++
-		}
+// 		if node.tombstone == true{  // ako je bio logicki obrisan
+// 			sl.len ++
+// 		}
 		node.tombstone = false
 		now := time.Now()
 		node.timestamp = now.Unix()
@@ -138,7 +138,7 @@ func (sl *SkipList) GetPrevious(key string, lvl int) []*Node {
 
 	for i := sl.level; i >= 0; i-- {
 		for ; curr.next[i] != nil; curr = curr.next[i] {
-			if curr.next[i].key >= key {
+			if curr.next[i].key >= key{
 				break
 			}
 		}
