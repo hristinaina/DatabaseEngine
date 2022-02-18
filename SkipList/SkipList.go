@@ -81,6 +81,10 @@ func (sl *SkipList) RandomLevels() int {
 		sl.level = sl.level+1
 		lvl = sl.level
 	}
+	if lvl > sl.maxLevel {
+		sl.level = sl.maxLevel
+		lvl = sl.level
+	}
 	return lvl
 }
 
