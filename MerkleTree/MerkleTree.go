@@ -1,11 +1,13 @@
-package main
+package MerkleTree
 
 import (
+	"NASP/SkipList"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -40,8 +42,8 @@ func Hash(data []byte) [20]byte {
 }
 
 // Serialization main func for file witting
-func (n *NodeMerkle) Serialization(){
-	file, err := os.OpenFile("Data/metadata1.txt", os.O_WRONLY|os.O_CREATE, 0777)
+func (n *NodeMerkle) Serialization(level int, index int){
+	file, err := os.OpenFile("Data/SSTableData/MerkleTreeFile_lvl" + strconv.Itoa(level) + "_idx" + strconv.Itoa(index) + ".txt", os.O_WRONLY|os.O_CREATE, 0777)
 	//file, err := os.OpenFile("Data/proba.db", os.O_WRONLY|os.O_CREATE, 0777)
 	defer func(file *os.File) {
 		err := file.Close()
@@ -75,7 +77,7 @@ func (n *NodeMerkle) PreorderSerialisation(file *os.File) {
 
 func Deserialization()  {
 	//file, err := os.OpenFile("Data/proba.db", os.O_RDONLY|os.O_CREATE, 0777)
-	file, err := os.OpenFile("Data/metadata1.txt", os.O_RDONLY|os.O_CREATE, 0777)
+	file, err := os.OpenFile("Data/metadata.txt", os.O_RDONLY|os.O_CREATE, 0777)
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
@@ -123,31 +125,10 @@ func NewMerkleTree(parts []NodeMerkle) *MerkleRoot {
 }
 
 // MakeNodesForMerkle converting nodes from skip list to the new format for merkle
-func MakeNodesForMerkle(nodes []Node) []NodeMerkle {
+func MakeNodesForMerkle(nodes []*SkipList.Node) []NodeMerkle {
 	merkleNodes := []NodeMerkle{}
 	for i := 0; i < len(nodes); i++ {
-		merkleNodes = append(merkleNodes, NodeMerkle{value: nodes[i].value, left: nil, right: nil})
+		merkleNodes = append(merkleNodes, NodeMerkle{value: nodes[i].Value(), left: nil, right: nil})
 	}
 	return merkleNodes
 }
-
-func main() {
-	fmt.Println([]byte(""))
-	nodes := []Node{
-		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
-		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
-		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
-		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
-		{key: "", value: []byte("a"), timestamp: 0, tombstone: false, next: nil},
-	}
-	newNodes := MakeNodesForMerkle(nodes)
-
-	r := NewMerkleTree(newNodes)
-	//fmt.Println(r.Root.value)
-	//fmt.Println(r.Root.left.value)
-	//fmt.Println(r.Root.right.value)
-	r.Root.Serialization()
-	Deserialization()
-}
-
-
