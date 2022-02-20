@@ -103,7 +103,85 @@ func (db *DataBase) Put(key string, value []byte) {
 }
 
 func (db *DataBase) Get(key string) (bool, []byte) {
-	//TODO Get path
+	// Try to find in Memtable
+	node := db.memtable.Find(key)
+	if node != nil {
+		value := node.Value()
+		db.cache.InsertElement(key, value)
+		return true, value
+	}
+
+	// Try to find deleted in Memtable
+	node = db.memtable.FindDeleted(key)
+	if node != nil {
+		return false, nil
+	}
+
+	// Try to find in Cache
+	found, value := db.cache.GetElement(key)
+	if found {
+		db.cache.InsertElement(key, value)
+		return true, value
+	}
+
+	// Try to find in BloomFilter -> Summary -> Index -> Data
+	for level := 1; level <= db.config[sstMaxLevel]; level++ {
+		bloomFilterFiles := SSTable.GetBloomfilterFilesToSearch(level)
+		for i := len(bloomFilterFiles) - 1; i >= 0; i-- {
+			fileName := bloomFilterFiles[i]
+
+			newBloomFilter := BloomFilter.Deserialize("Data/SSTableData/" + fileName)
+			found = newBloomFilter.FindElem(key)
+
+			lvl := strings.Split(fileName, "_")[1]
+			IdxString := strings.Split(fileName, "_")[2]
+			idx := strings.Split(IdxString, ".")[0]
+
+			// Found in BloomFilter -> Search in SummaryFile
+			if found {
+				SF, error1 := os.OpenFile("Data/SSTableData/SummaryFile_"+lvl+"_"+idx+".db", os.O_RDONLY, 0777)
+				if error1 != nil {
+					panic(error1)
+				}
+				foundInSum, offset := SSTable.FindInSummary(SF, key)
+				if foundInSum {
+
+					// Find offset in Index File
+					IF, error2 := os.OpenFile("Data/SSTableData/IndexFile_"+lvl+"_"+idx+".db", os.O_RDONLY, 0777)
+					if error2 != nil {
+						panic(error2)
+					}
+					newOffset := SSTable.FindInIndex(IF, offset)
+
+					// Find data in DataFile
+					DF, error3 := os.OpenFile("Data/SSTableData/DataFile_"+lvl+"_"+idx+".db", os.O_RDONLY, 0777)
+					if error3 != nil {
+						panic(error3)
+					}
+					found, value := SSTable.FindInData(DF, newOffset)
+
+					err := SF.Close()
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+					err = IF.Close()
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+					err = DF.Close()
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+
+					if found {
+						return true, value
+					} else {
+						return false, value
+					}
+				}
+			}
+		}
+	}
 	return false, nil
 }
 
@@ -118,7 +196,41 @@ func (db *DataBase) Delete(key string) bool {
 }
 
 func (db *DataBase) Flush() {
-	//TODO Flush
+	
+	if db.memtable.CurrentSize() == 0 {
+		return
+	}
+
+	// Get Data
+	dataset := db.memtable.Skiplist.GetAllElements()
+
+	// Bloom Filter
+	newBloomFilter := BloomFilter.NewBloom(db.memtable.MaxElements(), 0.05)
+	for _, data := range dataset {
+		newBloomFilter.Add(data.Key())
+	}
+
+	// Add data to MerkleTree
+	node := MerkleTree.MakeNodesForMerkle(dataset)
+	newMerkleTree := MerkleTree.NewMerkleTree(node)
+
+	// Find Last File Index in first level
+	// Add 1 to make New File Index in first level
+	NewIndex := SSTable.FindLSMIndex(1) + 1
+
+	// Serialize SSTable, BloomFilter, MerkleTree & TOC
+	SSTable.CreateSSTable(dataset, 1, NewIndex)
+	newBloomFilter.Serialize(1, NewIndex)
+	newMerkleTree.Root.Serialization(1, NewIndex)
+	SSTable.SerializationTOC(1, NewIndex)
+
+	// Restart Memtable
+	db.memtable.Empty()
+
+	// Checking whether compaction must be performed
+	if NewIndex == db.config[sstMaxIndex] {
+		SSTable.Compactions(db.config[sstMaxIndex], db.config[sstMaxLevel], 1, db.memtable.MaxElements())
+	}
 }
 
 func (db *DataBase) Quit() {
