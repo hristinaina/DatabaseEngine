@@ -1,0 +1,12 @@
+{
+  "cache_max_segments" : 5,
+  "wal_max_segments" : 5,
+  "wal_low_mark" : 3,
+  "token_bucket_max_tokens" : 60,
+  "token_bucket_interval" : 60,
+  "memtable_max_level" : 10,
+  "memtable_threshold" : 2000,
+  "memtable_max_elements" : 2,
+  "sstable_max_elem_per_level" : 4,
+  "sstable_max_level" : 3
+}
