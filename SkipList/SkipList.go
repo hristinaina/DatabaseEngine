@@ -14,12 +14,12 @@ type Node struct {
 	next      []*Node
 }
 
-func NewNode(key string, value []byte, level int, timestamp int64, _thumbstone bool) *Node {
+func NewNode(key string, value []byte, level int, timestamp int64, tombstone bool) *Node {
 	return &Node{
 		key:       key,
 		value:     value,
 		timestamp: timestamp,
-		tombstone: _thumbstone,
+		tombstone: tombstone,
 		next:      make([]*Node, level),
 	}
 }
@@ -120,11 +120,11 @@ func (sl *SkipList) Contains(key string) bool {
 	return sl.Find(key) != nil
 }
 
-func (sl *SkipList) Insert(key string, value []byte, _thumbstone bool) bool {
+func (sl *SkipList) Insert(key string, value []byte, tombstone bool) bool {
 	node := sl.Find(key)
 	// ako node postoji u skip listi, vrsi se AZURIRANJE
 	if node != nil {
-		node.tombstone = _thumbstone
+		node.tombstone = tombstone
 		now := time.Now()
 		node.timestamp = now.Unix()
 		node.value = value
@@ -134,7 +134,7 @@ func (sl *SkipList) Insert(key string, value []byte, _thumbstone bool) bool {
 	lvl := sl.RandomLevels()
 	now := time.Now()
 	timestamp := now.Unix()
-	node = NewNode(key, value, lvl+1, timestamp, _thumbstone)
+	node = NewNode(key, value, lvl+1, timestamp, tombstone)
 
 	// na svakom nivou treba prepaviti pokazivace (da prethodni ukazuje na node i node na sljedeci)
 	previous := sl.GetPrevious(key, lvl)
