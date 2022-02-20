@@ -111,7 +111,7 @@ func (wal *WriteAheadLog) _generateNewFile() error {
 }
 
 //Public Functions
-func GenerateWAL(maxSeg uint16, lowMark uint16) WriteAheadLog {
+func GenerateWAL(maxSeg uint16, lowMark uint16) *WriteAheadLog {
 	files, _ := ioutil.ReadDir("Data/WAL")
 	//Figure out the idx of the wal
 	newIdx := 0
@@ -134,7 +134,7 @@ func GenerateWAL(maxSeg uint16, lowMark uint16) WriteAheadLog {
 		newName := "WAL_" + strconv.Itoa(newIdx) + ".bin"
 		wal.file, _ = os.OpenFile("Data/WAL/"+newName, os.O_RDWR, 0777)
 	}
-	return wal
+	return &wal
 }
 func (wal *WriteAheadLog) InsertData(key string, value []byte) bool {
 	// Generate byte data
@@ -268,7 +268,7 @@ func (wal *WriteAheadLog) Reset() *WriteAheadLog {
 		panic(err)
 	}
 	newWal := GenerateWAL(5, 3)
-	return &newWal
+	return newWal
 }
 func (wal *WriteAheadLog) Close() {
 	wal.file.Close()
@@ -295,11 +295,11 @@ func findTest(curWal WriteAheadLog) {
 		fmt.Println("Data not found!")
 	}
 }
-func main() {
+func test() {
 	curWal := GenerateWAL(5, 3)
 	curWal.Reset() //TODO How to connect new wal to old wal reference?
-	initTest(curWal)
-	findTest(curWal)
+	//initTest(curWal)
+	//findTest(curWal)
 	//curWal.DeleteWALFiles()
 	//fmt.Println(curWal.file.Name())
 }
