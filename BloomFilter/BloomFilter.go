@@ -1,12 +1,12 @@
-package main
+package BloomFilter
 
 import (
 	"encoding/gob"
-	"fmt"
 	"github.com/spaolacci/murmur3"
 	"hash"
 	"math"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func CalculateK(expectedElements int, m uint) uint {
 
 func CreateHashFunctions(k uint, ts uint) []hash.Hash32 {
 	h := []hash.Hash32{}
-	//ts := uint(time.Now().Unix())
+	//Ts := uint(time.Now().Unix())
 	for i := uint(0); i < k; i++ {
 		h = append(h, murmur3.New32WithSeed(uint32(ts+i)))
 	}
@@ -28,20 +28,20 @@ func CreateHashFunctions(k uint, ts uint) []hash.Hash32 {
 }
 
 type BloomFilter struct {
-	expectedElem int
-	falsePositiveRate float64
-	m uint
-	k uint
-	ts uint
-	HashFunc []hash.Hash32
-	bytes []byte
+	ExpectedElem      int
+	FalsePositiveRate float64
+	M                 uint
+	K                 uint
+	Ts                uint
+	HashFunc          []hash.Hash32
+	Bytes             []byte
 }
 
 func NewBloom(expectedElem int, falsePositiveRate float64) BloomFilter {
 	m := CalculateM(expectedElem, falsePositiveRate)
 	k := CalculateK(expectedElem, m)
-	//if ts == 0 {
-		ts := uint(time.Now().Unix())
+	//if Ts == 0 {
+	ts := uint(time.Now().Unix())
 	//}
 	hashFuncs := CreateHashFunctions(k, ts)
 	bytes := make([]byte, m)
@@ -49,28 +49,28 @@ func NewBloom(expectedElem int, falsePositiveRate float64) BloomFilter {
 }
 
 func (bloom *BloomFilter) Add(item string) {
-	for i := uint(0); i < bloom.k; i++ {
+	for i := uint(0); i < bloom.K; i++ {
 		bloom.HashFunc[i].Reset()
 		bloom.HashFunc[i].Write([]byte(item))
-		j := bloom.HashFunc[i].Sum32() % uint32(bloom.m)
-		bloom.bytes[j] = 1
+		j := bloom.HashFunc[i].Sum32() % uint32(bloom.M)
+		bloom.Bytes[j] = 1
 	}
 }
 
-func (bloom *BloomFilter) FindElem(item string) bool{
-	for i := uint(0); i < bloom.k; i++ {
+func (bloom *BloomFilter) FindElem(item string) bool {
+	for i := uint(0); i < bloom.K; i++ {
 		bloom.HashFunc[i].Reset()
 		bloom.HashFunc[i].Write([]byte(item))
-		j := bloom.HashFunc[i].Sum32() % uint32(bloom.m)
-		if bloom.bytes[j] == 0 {
+		j := bloom.HashFunc[i].Sum32() % uint32(bloom.M)
+		if bloom.Bytes[j] == 0 {
 			return false
 		}
 	}
 	return true
 }
 
-func (bloom *BloomFilter) Serialize() {
-	file, err := os.OpenFile("Data/bloom.db", os.O_WRONLY|os.O_CREATE, 0777)
+func (bloom *BloomFilter) Serialize(level int, index int) {
+	file, err := os.OpenFile("Data/SSTableData/BloomFilterFile_lvl"+strconv.Itoa(level)+"_idx"+strconv.Itoa(index)+".db", os.O_WRONLY|os.O_CREATE, 0777)
 	if err != nil {
 		panic(err)
 	}
@@ -85,49 +85,22 @@ func (bloom *BloomFilter) Serialize() {
 	file.Close()
 }
 
-func Deserialize() BloomFilter {
-	file, err := os.OpenFile("Data/bloom.db", os.O_RDWR, 0777)
+func Deserialize(fileName string) *BloomFilter {
+	file, err := os.OpenFile(fileName, os.O_RDWR, 0777)
 	if err != nil {
 		panic(err)
 	}
 
-	bloom := new(BloomFilter)
-	//bloom := new(BloomFilter)
+	bloom := BloomFilter{}
 	decoder := gob.NewDecoder(file)
 	err = decoder.Decode(&bloom)
 	if err != nil {
 		panic(err)
 	}
-	hashFuncs := CreateHashFunctions(bloom.k, bloom.ts)
+	hashFuncs := CreateHashFunctions(bloom.K, bloom.Ts)
 	bloom.HashFunc = hashFuncs
 
 	file.Close()
 
-	return *bloom
-}
-
-func main() {
-	bloom := NewBloom(10, 2)
-	//fmt.Println(bloom.bytes)
-	//Add(bloom, "m")
-	//fmt.Println(bloom.bytes)
-	/*for i := uint(0); i < bloom.k; i++ {
-		fmt.Println(bloom.HashFunc[i])
-		fmt.Println(bloom.HashFunc[i].Sum32())
-		fmt.Println(bloom.HashFunc[i].Sum32() % uint32(bloom.m))
-		fmt.Println("======================================")
-		//position := bloom.HashFunc[](item) % bloom.m
-	}*/
-	bloom.Add("mark")
-	fmt.Println(bloom.bytes)
-	fmt.Println(bloom.FindElem("mark"))
-	fmt.Println(bloom.FindElem("po"))
-	bloom.Add("po")
-	fmt.Println(bloom.bytes)
-	bloom.Serialize()
-	bloom2 := Deserialize()
-	fmt.Println(bloom2)
-	//fmt.Println(bloom.FindElem("mark"))
-	//fmt.Println(bloom.FindElem("po"))
-
+	return &bloom
 }
