@@ -1,4 +1,4 @@
-package main
+package SkipList
 
 import (
 	"fmt"
@@ -14,12 +14,12 @@ type Node struct {
 	next      []*Node
 }
 
-func NewNode(key string, value []byte, level int, timestamp int64) *Node {
+func NewNode(key string, value []byte, level int, timestamp int64, _thumbstone bool) *Node {
 	return &Node{
 		key:       key,
 		value:     value,
 		timestamp: timestamp,
-		tombstone: false,
+		tombstone: _thumbstone,
 		next:      make([]*Node, level),
 	}
 }
@@ -30,7 +30,7 @@ func NewHead(level int) *Node {
 		value:     nil,
 		timestamp: 0,
 		tombstone: false,
-		next: make([]*Node, level),
+		next:      make([]*Node, level),
 	}
 }
 
@@ -51,19 +51,19 @@ func (n *Node) Tombstone() bool {
 }
 
 type SkipList struct {
-	head *Node
+	head     *Node
 	maxLevel int
-	level int
-	len int    // broj elemenata na 0-tom nivou
+	level    int
+	len      int // broj elemenata na 0-tom nivou
 }
 
 func NewSkipList(maxLevel int) *SkipList {
-	header := NewHead(maxLevel+1)
+	header := NewHead(maxLevel + 1)
 	return &SkipList{
-		head: header,
+		head:     header,
 		maxLevel: maxLevel,
-		level: 1,
-		len: 0,
+		level:    1,
+		len:      0,
 	}
 }
 
@@ -75,10 +75,10 @@ func (sl *SkipList) RandomLevels() int {
 	lvl := 1
 	rand.Seed(time.Now().UnixNano())
 
-	for ; rand.Int31n(2) == 1; lvl++ {      // vraca int32 u opsegu [0,2) tj ili 0 ili 1
+	for ; rand.Int31n(2) == 1; lvl++ { // vraca int32 u opsegu [0,2) tj ili 0 ili 1
 	}
 	if lvl > sl.level {
-		sl.level = sl.level+1
+		sl.level = sl.level + 1
 		lvl = sl.level
 	}
 	if lvl > sl.maxLevel {
@@ -88,13 +88,27 @@ func (sl *SkipList) RandomLevels() int {
 	return lvl
 }
 
-func (sl *SkipList) Find(key string) *Node{
+func (sl *SkipList) Find(key string) *Node {
 	curr := sl.head
 	for i := sl.level; i >= 0; i-- {
 		for ; curr.next[i] != nil; curr = curr.next[i] {
 			if curr.next[i].key > key {
 				break
-			} else if curr.next[i].key == key && curr.next[i].tombstone == false{
+			} else if curr.next[i].key == key && curr.next[i].tombstone == false {
+				return curr.next[i]
+			}
+		}
+	}
+	return nil
+}
+
+func (sl *SkipList) FindDeleted(key string) *Node {
+	curr := sl.head
+	for i := sl.level; i >= 0; i-- {
+		for ; curr.next[i] != nil; curr = curr.next[i] {
+			if curr.next[i].key > key {
+				break
+			} else if curr.next[i].key == key && curr.next[i].tombstone == true {
 				return curr.next[i]
 			}
 		}
@@ -106,14 +120,14 @@ func (sl *SkipList) Contains(key string) bool {
 	return sl.Find(key) != nil
 }
 
-func (sl *SkipList) Insert(key string, value []byte) bool {
+func (sl *SkipList) Insert(key string, value []byte, _thumbstone bool) bool {
 	node := sl.Find(key)
 	// ako node postoji u skip listi, vrsi se AZURIRANJE
-	if node != nil{
-// 		if node.tombstone == true{  // ako je bio logicki obrisan
-// 			sl.len ++
-// 		}
-		node.tombstone = false
+	if node != nil {
+		// 		if node.tombstone == true{  // ako je bio logicki obrisan
+		// 			sl.len ++
+		// 		}
+		node.tombstone = _thumbstone
 		now := time.Now()
 		node.timestamp = now.Unix()
 		node.value = value
@@ -123,7 +137,7 @@ func (sl *SkipList) Insert(key string, value []byte) bool {
 	lvl := sl.RandomLevels()
 	now := time.Now()
 	timestamp := now.Unix()
-	node = NewNode(key, value, lvl+1, timestamp)
+	node = NewNode(key, value, lvl+1, timestamp, _thumbstone)
 
 	// na svakom nivou treba prepaviti pokazivace (da prethodni ukazuje na node i node na sljedeci)
 	previous := sl.GetPrevious(key, lvl)
@@ -135,6 +149,18 @@ func (sl *SkipList) Insert(key string, value []byte) bool {
 	return true
 }
 
+func (sl *SkipList) GetAllElements() []*Node {
+	current := sl.head
+	res := make([]*Node, 0)
+	current = current.next[0]
+	res = append(res, current)
+	for i := 1; i < sl.len; i++ {
+		current = current.next[0]
+		res = append(res, current)
+	}
+	return res
+}
+
 // funckija dobavlja sve cvorove (na svim nivoima) koji su neposredno prije proslijedjenog
 func (sl *SkipList) GetPrevious(key string, lvl int) []*Node {
 	previous := make([]*Node, lvl+1)
@@ -142,7 +168,7 @@ func (sl *SkipList) GetPrevious(key string, lvl int) []*Node {
 
 	for i := sl.level; i >= 0; i-- {
 		for ; curr.next[i] != nil; curr = curr.next[i] {
-			if curr.next[i].key >= key{
+			if curr.next[i].key >= key {
 				break
 			}
 		}
@@ -162,11 +188,11 @@ func (sl *SkipList) RemovePh(key string) bool {
 		return false
 	}
 	previous := sl.GetPrevious(key, len(node.next))
-	for i := len(previous)-2; i >= 0; i-- {
-		if sl.head.next[i] == nil{
+	for i := len(previous) - 2; i >= 0; i-- {
+		if sl.head.next[i] == nil {
 			// treba ukloniti suvisne nivoe
 			sl.level = sl.level - 1
-		}else {
+		} else {
 			previous[i].next[i] = node.next[i]
 		}
 	}
@@ -201,8 +227,8 @@ func (sl *SkipList) PrintSL() {
 	for i := sl.level; i >= 0; i-- {
 		curr := sl.head
 		fmt.Print("[")
-		for curr.next[i] != nil{
-			if curr.next[i].tombstone == false{
+		for curr.next[i] != nil {
+			if curr.next[i].tombstone == false {
 				fmt.Print(curr.next[i].key + ", ")
 			}
 			curr = curr.next[i]
@@ -211,14 +237,14 @@ func (sl *SkipList) PrintSL() {
 	}
 }
 
-func main() {
+func test() {
 	sl := NewSkipList(10)
-	sl.Insert("1", []byte("pozdrav1"))
-	sl.Insert("2", []byte("pozdrav2"))
-	sl.Insert("4", []byte("pozdrav4"))
-	sl.Insert("6", []byte("pozdrav6"))
-	sl.Insert("5", []byte("pozdrav5"))
-	sl.Insert("3", []byte("pozdrav3"))
+	sl.Insert("1", []byte("pozdrav1"), false)
+	sl.Insert("2", []byte("pozdrav2"), false)
+	sl.Insert("4", []byte("pozdrav4"), false)
+	sl.Insert("6", []byte("pozdrav6"), false)
+	sl.Insert("5", []byte("pozdrav5"), false)
+	sl.Insert("3", []byte("pozdrav3"), false)
 	sl.PrintSL()
 
 	node := sl.Find("2")
@@ -236,7 +262,7 @@ func main() {
 
 	sl.RemoveLog("3")
 
-	sl.Insert("2", []byte("poyyy"))
+	sl.Insert("2", []byte("poyyy"), false)
 	sl.PrintSL()
 
 	fmt.Println(" ")
