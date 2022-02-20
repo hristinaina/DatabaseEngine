@@ -1,7 +1,9 @@
-package main
+package CountMinSketch
 
 // ovo je moja verzija
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"github.com/spaolacci/murmur3"
 	"hash"
@@ -17,9 +19,8 @@ func CalculateK(delta float64) uint {
 	return uint(math.Ceil(math.Log(math.E / delta)))
 }
 
-func CreateHashFunctions(k uint) []hash.Hash32 {
+func CreateHashFunctions(k uint, ts uint) []hash.Hash32 {
 	h := []hash.Hash32{}
-	ts := uint(time.Now().Unix())
 	for i := uint(0); i < k; i++ {
 		h = append(h, murmur3.New32WithSeed(uint32(ts+i)))
 	}
@@ -27,42 +28,44 @@ func CreateHashFunctions(k uint) []hash.Hash32 {
 }
 
 type CountMinSketch struct {
-	epsilon float64
-	delta float64
-	matrix [][]uint
-	m uint
-	k uint
+	Epsilon       float64
+	Delta         float64
+	Matrix        [][]uint
+	M             uint
+	K             uint
+	Ts            uint
 	hashFunctions []hash.Hash32
 }
 
 func NewCountMinSketch(epsilon, delta float64) *CountMinSketch {
 	m := CalculateM(epsilon)
 	k := CalculateK(delta)
-	hashes := CreateHashFunctions(k)
+	ts := uint(time.Now().Unix())
+	hashes := CreateHashFunctions(k, ts)
 	matrix := make([][]uint, k)
 	for i := range matrix {
 		matrix[i] = make([]uint, m)
 	}
-	return &CountMinSketch{epsilon: epsilon, delta: delta, matrix: matrix, m: m, k: k, hashFunctions: hashes}
+	return &CountMinSketch{Epsilon: epsilon, Delta: delta, Matrix: matrix, M: m, K: k, Ts: ts, hashFunctions: hashes}
 }
 
-func (countMinSketch *CountMinSketch) AddItem(item string)  {
-	for j := 0; j < int(countMinSketch.k); j++ {
+func (countMinSketch *CountMinSketch) AddItem(item string) {
+	for j := 0; j < int(countMinSketch.K); j++ {
 		countMinSketch.hashFunctions[j].Reset()
 		countMinSketch.hashFunctions[j].Write([]byte(item))
-		i := countMinSketch.hashFunctions[j].Sum32() % uint32(countMinSketch.m)
-		countMinSketch.matrix[j][i] += 1
+		i := countMinSketch.hashFunctions[j].Sum32() % uint32(countMinSketch.M)
+		countMinSketch.Matrix[j][i] += 1
 	}
 }
 
-func (countMinSketch *CountMinSketch) frequencyOfElement(element string) uint {
+func (countMinSketch *CountMinSketch) FrequencyOfElement(element string) uint {
 
-	a := make([]uint, countMinSketch.k, countMinSketch.k)
-	for j := 0; j < int(countMinSketch.k); j++ {
+	a := make([]uint, countMinSketch.K, countMinSketch.K)
+	for j := 0; j < int(countMinSketch.K); j++ {
 		countMinSketch.hashFunctions[j].Reset()
 		countMinSketch.hashFunctions[j].Write([]byte(element))
-		i := countMinSketch.hashFunctions[j].Sum32() % uint32(countMinSketch.m)
-		a[j] = countMinSketch.matrix[j][i]
+		i := countMinSketch.hashFunctions[j].Sum32() % uint32(countMinSketch.M)
+		a[j] = countMinSketch.Matrix[j][i]
 	}
 
 	min := a[0]
@@ -76,13 +79,35 @@ func (countMinSketch *CountMinSketch) frequencyOfElement(element string) uint {
 
 }
 
-func main() {
+func (CMS *CountMinSketch) Encode() []byte {
+	// Encode
+	encoded := bytes.Buffer{}
+	encoder := gob.NewEncoder(&encoded)
+	err := encoder.Encode(CMS)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	return encoded.Bytes()
+}
+
+func (CMS *CountMinSketch) Decode(data []byte) {
+	// Decode
+	encoded := bytes.NewBuffer(data)
+	decoder := gob.NewDecoder(encoded)
+	err := decoder.Decode(CMS)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	CMS.hashFunctions = CreateHashFunctions(CMS.K, CMS.Ts)
+}
+
+func test() {
 	countMinSketch := NewCountMinSketch(0.01, 0.01)
-	fmt.Println(countMinSketch.matrix)
+	fmt.Println(countMinSketch.Matrix)
 	countMinSketch.AddItem("ananas")
-	fmt.Println(countMinSketch.matrix)
+	fmt.Println(countMinSketch.Matrix)
 	countMinSketch.AddItem("ananas")
-	fmt.Println(countMinSketch.matrix)
-	fmt.Println(countMinSketch.frequencyOfElement("ananas"))
-	fmt.Println(countMinSketch.frequencyOfElement("nema"))
+	fmt.Println(countMinSketch.Matrix)
+	fmt.Println(countMinSketch.FrequencyOfElement("ananas"))
+	fmt.Println(countMinSketch.FrequencyOfElement("nema"))
 }
