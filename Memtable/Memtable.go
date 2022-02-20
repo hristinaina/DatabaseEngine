@@ -91,8 +91,8 @@ func (mt *Memtable) Delete(key string) {
 		return
 	}
 	mt.Skiplist.RemoveLog(key)
-	mt.currSize = mt.currSize - len(nodeToDelete.Key()) - len(nodeToDelete.Value())
-	mt.numElements -= 1
+// 	mt.currSize = mt.currSize - len(nodeToDelete.Key()) - len(nodeToDelete.Value())
+// 	mt.numElements -= 1
 	return
 }
 
