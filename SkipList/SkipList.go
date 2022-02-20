@@ -75,7 +75,7 @@ func (sl *SkipList) RandomLevels() int {
 	lvl := 1
 	rand.Seed(time.Now().UnixNano())
 
-	for ; rand.Int31n(2) == 1; lvl++ { // vraca int32 u opsegu [0,2) tj ili 0 ili 1
+	for ; rand.Int31n(2) == 1; lvl++ {
 	}
 	if lvl > sl.level {
 		sl.level = sl.level + 1
