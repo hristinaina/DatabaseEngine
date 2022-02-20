@@ -124,9 +124,6 @@ func (sl *SkipList) Insert(key string, value []byte, _thumbstone bool) bool {
 	node := sl.Find(key)
 	// ako node postoji u skip listi, vrsi se AZURIRANJE
 	if node != nil {
-		// 		if node.tombstone == true{  // ako je bio logicki obrisan
-		// 			sl.len ++
-		// 		}
 		node.tombstone = _thumbstone
 		now := time.Now()
 		node.timestamp = now.Unix()
