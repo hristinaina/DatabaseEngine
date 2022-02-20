@@ -91,7 +91,7 @@ func (list *DLList) removeOldest() {
 	list.oldest = list.oldest.previous
 	list.oldest.next = nil
 }
-func (list *DLList) insertElement(key string, value []byte) {
+func (list *DLList) InsertElement(key string, value []byte) {
 	node := GenerateNode(key, value)
 	if list.newest != nil {
 		node.next = list.newest
@@ -126,16 +126,16 @@ func GenerateCache(maxSeg uint32) *Cache {
 	cache.hashMap = make(map[string][]byte, cache.maxSegments)
 	return &cache
 }
-func (cache *Cache) insertElement(key string, value []byte) bool {
+func (cache *Cache) InsertElement(key string, value []byte) bool {
 	_, exist := cache.hashMap[key]
-	if exist {
+	if exist && cache.curSegments > 1 {
 		// Move to the newest place
 		cache.list.moveToNewest(key)
 	} else {
 		// Insert new element
 		cache.hashMap[key] = value
 		cache.curSegments++
-		cache.list.insertElement(key, value)
+		cache.list.InsertElement(key, value)
 	}
 	// Check for overflow &/| remove oldest
 	if cache.curSegments > cache.maxSegments {
@@ -147,7 +147,7 @@ func (cache *Cache) insertElement(key string, value []byte) bool {
 	}
 	return true
 }
-func (cache *Cache) removeElement(key string) bool {
+func (cache *Cache) RemoveElement(key string) bool {
 	_, exist := cache.hashMap[key]
 	if exist {
 		delete(cache.hashMap, key)
@@ -157,7 +157,7 @@ func (cache *Cache) removeElement(key string) bool {
 	}
 	return false
 }
-func (cache *Cache) getElement(key string) (bool, []byte) {
+func (cache *Cache) GetElement(key string) (bool, []byte) {
 	value, exist := cache.hashMap[key]
 	if exist {
 		cache.list.moveToNewest(key)
@@ -167,43 +167,43 @@ func (cache *Cache) getElement(key string) (bool, []byte) {
 }
 
 //TEST
-func main() {
+func test() {
 	cache := GenerateCache(5)
-	cache.insertElement("1", []byte("Test1"))
-	cache.insertElement("2", []byte("Test2"))
-	cache.insertElement("3", []byte("Test3"))
-	cache.insertElement("4", []byte("Test4"))
-	cache.insertElement("5", []byte("Test5"))
-	cache.insertElement("6", []byte("Test6"))
+	cache.InsertElement("1", []byte("Test1"))
+	cache.InsertElement("2", []byte("Test2"))
+	cache.InsertElement("3", []byte("Test3"))
+	cache.InsertElement("4", []byte("Test4"))
+	cache.InsertElement("5", []byte("Test5"))
+	cache.InsertElement("6", []byte("Test6"))
 	fmt.Println("\nInsert data 1 trough 6")
 	cache.list.printElements()
 
 	fmt.Println("\nInsert data 3")
-	cache.insertElement("3", []byte("Test3"))
+	cache.InsertElement("3", []byte("Test3"))
 	cache.list.printElements()
 
 	fmt.Println("\nGet data 5")
-	fmt.Println(cache.getElement("5"))
+	fmt.Println(cache.GetElement("5"))
 	cache.list.printElements()
 
 	fmt.Println("\nRemove data 40, 4")
-	cache.removeElement("40")
-	cache.removeElement("4")
+	cache.RemoveElement("40")
+	cache.RemoveElement("4")
 	cache.list.printElements()
 
 	fmt.Println("\nRemove data 2")
-	cache.removeElement("2")
+	cache.RemoveElement("2")
 	cache.list.printElements()
 
 	fmt.Println("\nInsert data 1")
-	cache.insertElement("1", []byte("Test1"))
+	cache.InsertElement("1", []byte("Test1"))
 	cache.list.printElements()
 
 	fmt.Println("\nInsert data 6")
-	cache.insertElement("6", []byte("Test6"))
+	cache.InsertElement("6", []byte("Test6"))
 	cache.list.printElements()
 
 	fmt.Println("\nRemove data 6")
-	cache.removeElement("6")
+	cache.RemoveElement("6")
 	cache.list.printElements()
 }
