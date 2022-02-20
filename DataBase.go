@@ -247,6 +247,7 @@ func printStandardMenu() {
 	fmt.Println(" > 10+")
 	fmt.Println("Unesite komandu (X za izadji): ")
 }
+
 func main() {
 	app := GenerateDataBase()
 	reader := bufio.NewReader(os.Stdin)
@@ -313,6 +314,7 @@ func print10plusMenu() {
 	fmt.Println(" > TEST_GET_CMS|key")
 	fmt.Println("Unesite komandu (N za nazad): ")
 }
+
 func plus10Menu(app *DataBase) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
@@ -353,6 +355,7 @@ func Put_HLL(app *DataBase, input []string) {
 	hllData := hll.Encode()
 	app.Put(key, hllData)
 }
+
 func Get_HLL(app *DataBase, input []string) {
 	key := input[1]
 	found, hllData := app.Get(key)
@@ -365,6 +368,7 @@ func Get_HLL(app *DataBase, input []string) {
 	}
 	fmt.Println("Dati kljuc nije pronadjen! :(")
 }
+
 func Put_CMS(app *DataBase, input []string) {
 	key := input[1]
 	epsilon, _ := strconv.ParseFloat(input[2], 64)
@@ -373,6 +377,7 @@ func Put_CMS(app *DataBase, input []string) {
 	cmsData := cms.Encode()
 	app.Put(key, cmsData)
 }
+
 func Get_CMS(app *DataBase, input []string) {
 	key := input[1]
 	found, cmsData := app.Get(key)
@@ -385,6 +390,7 @@ func Get_CMS(app *DataBase, input []string) {
 	}
 	fmt.Println("Dati kljuc nije pronadjen! :(")
 }
+
 func Test_put_HLL(app *DataBase, input []string) {
 	key := input[1]
 	hll := HyperLogLog.MakeHLL(8)
@@ -397,6 +403,7 @@ func Test_put_HLL(app *DataBase, input []string) {
 	hllData := hll.Encode()
 	app.Put(key, hllData)
 }
+
 func Test_get_HLL(app *DataBase, input []string) {
 	key := input[1]
 	found, hllData := app.Get(key)
@@ -408,6 +415,7 @@ func Test_get_HLL(app *DataBase, input []string) {
 	}
 	fmt.Println("Dati kljuc nije pronadjen! :(")
 }
+
 func Test_put_CMS(app *DataBase, input []string) {
 	key := input[1]
 	cms := CountMinSketch.NewCountMinSketch(0.01, 0.01)
@@ -420,6 +428,7 @@ func Test_put_CMS(app *DataBase, input []string) {
 	fmt.Println(len(cmsData))
 	app.Put(key, cmsData)
 }
+
 func Test_get_CMS(app *DataBase, input []string) {
 	key := input[1]
 	found, cmsData := app.Get(key)
