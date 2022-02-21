@@ -59,7 +59,7 @@ func (n *NodeMerkle) Serialization(level int, index int){
 
 // PreorderSerialisation helper func for file witting
 func (n *NodeMerkle) PreorderSerialisation(file *os.File) {
-	fmt.Println(n.value)
+	//fmt.Println(n.value)
 	file.Write([]byte(n.String()))
 	file.Write([]byte(";"))
 	if n.left != nil {
