@@ -1,0 +1,5 @@
+Data/SSTableData/DataFile_lvl2_idx2.db
+Data/SSTableData/IndexFile_lvl2_idx2.db
+Data/SSTableData/SummaryFile_lvl2_idx2.db
+Data/SSTableData/BloomFilterFile_lvl2_idx2.db
+Data/SSTableData/MerkleTreeFile_lvl2_idx2.txt
