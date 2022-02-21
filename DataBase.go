@@ -33,7 +33,6 @@ const (
 )
 
 type DataBase struct {
-	//TODO Memtable
 	memtable    *Memtable.Memtable
 	cache       *CacheLRU.Cache
 	tokenBucket *TokenBucket.TokenBucket
@@ -334,14 +333,6 @@ func plus10Menu(app *DataBase) {
 			Put_CMS(app, inputSplit)
 		} else if inputSplit[0] == "GET_CMS" {
 			Get_CMS(app, inputSplit)
-		} else if inputSplit[0] == "TEST_PUT_HLL" {
-			Test_put_HLL(app, inputSplit)
-		} else if inputSplit[0] == "TEST_GET_HLL" {
-			Test_get_HLL(app, inputSplit)
-		} else if inputSplit[0] == "TEST_PUT_CMS" {
-			Test_put_CMS(app, inputSplit)
-		} else if inputSplit[0] == "TEST_GET_CMS" {
-			Test_get_CMS(app, inputSplit)
 		} else {
 			fmt.Println("Uneli ste nepoznatu komandu.")
 		}
@@ -350,10 +341,14 @@ func plus10Menu(app *DataBase) {
 
 func Put_HLL(app *DataBase, input []string) {
 	key := input[1]
-	precisionInt, _ := strconv.Atoi(input[2])
-	hll := HyperLogLog.MakeHLL(uint8(precisionInt))
-	hllData := hll.Encode()
-	app.Put(key, hllData)
+	found, hllData := app.Get(key)
+	hll := HyperLogLog.MakeHLL(8)
+	if found {
+		hll.Decode(hllData)
+	}
+	hll.Add(input[2])
+	hllWriteData := hll.Encode()
+	app.Put(key, hllWriteData)
 }
 
 func Get_HLL(app *DataBase, input []string) {
@@ -362,8 +357,8 @@ func Get_HLL(app *DataBase, input []string) {
 	if found {
 		hll := HyperLogLog.HLL{}
 		hll.Decode(hllData)
-		fmt.Println("Pronasli smo hll sa kljucem " + key + ":")
-		fmt.Println(hll)
+		fmt.Println("Pronasli smo hll sa kljucem "+key+", i njegov Estimate = ", hll.Estimate())
+		//fmt.Println(hll)
 		return
 	}
 	fmt.Println("Dati kljuc nije pronadjen! :(")
