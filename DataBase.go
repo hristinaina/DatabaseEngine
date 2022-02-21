@@ -366,11 +366,14 @@ func Get_HLL(app *DataBase, input []string) {
 
 func Put_CMS(app *DataBase, input []string) {
 	key := input[1]
-	epsilon, _ := strconv.ParseFloat(input[2], 64)
-	delta, _ := strconv.ParseFloat(input[3], 64)
-	cms := CountMinSketch.NewCountMinSketch(epsilon, delta)
-	cmsData := cms.Encode()
-	app.Put(key, cmsData)
+	found, cmsData := app.Get(key)
+	cms := CountMinSketch.NewCountMinSketch(0.01, 0.01)
+	if found {
+		cms.Decode(cmsData)
+	}
+	cms.AddItem(input[2])
+	cmsWriteData := cms.Encode()
+	app.Put(key, cmsWriteData)
 }
 
 func Get_CMS(app *DataBase, input []string) {
@@ -379,8 +382,9 @@ func Get_CMS(app *DataBase, input []string) {
 	if found {
 		cms := CountMinSketch.CountMinSketch{}
 		cms.Decode(cmsData)
-		fmt.Println("Pronasli smo cms sa kljucem " + key + ":")
-		fmt.Println(cms)
+		fmt.Println("Pronasli smo cms sa kljucem "+key+","+
+			" i njegov FrequencyOfElement za '"+input[2]+"' = ", cms.FrequencyOfElement(input[2]))
+		//fmt.Println(cms)
 		return
 	}
 	fmt.Println("Dati kljuc nije pronadjen! :(")
