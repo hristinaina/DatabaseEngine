@@ -139,7 +139,6 @@ func (cache *Cache) InsertElement(key string, value []byte) bool {
 	}
 	// Check for overflow &/| remove oldest
 	if cache.curSegments > cache.maxSegments {
-		print("REMOVE LAST\n")
 		oldestKey := cache.list.oldest.key
 		delete(cache.hashMap, oldestKey)
 		cache.curSegments--
