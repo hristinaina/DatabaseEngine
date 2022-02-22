@@ -4,7 +4,7 @@ import (
 	"NASP/SkipList"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
+	//"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
