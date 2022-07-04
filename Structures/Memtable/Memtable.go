@@ -1,7 +1,7 @@
 package Memtable
 
 import (
-	"NASP/DataStructures/SkipList"
+	"NASP/Structures/SkipList"
 	"fmt"
 )
 
