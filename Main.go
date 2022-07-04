@@ -1,15 +1,15 @@
 package main
 
 import (
-	"NASP/BloomFilter"
-	"NASP/CacheLRU"
-	"NASP/CountMinSketch"
-	"NASP/HyperLogLog"
-	"NASP/Memtable"
-	"NASP/MerkleTree"
-	"NASP/SSTable"
-	"NASP/TokenBucket"
-	"NASP/WAL"
+	"NASP/Structures/BloomFilter"
+	"NASP/Structures/CacheLRU"
+	"NASP/Structures/CountMinSketch"
+	"NASP/Structures/HyperLogLog"
+	"NASP/Structures/Memtable"
+	"NASP/Structures/MerkleTree"
+	"NASP/Structures/SSTable"
+	"NASP/Structures/TokenBucket"
+	"NASP/Structures/WAL"
 	"bufio"
 	"encoding/json"
 	"fmt"
@@ -254,7 +254,7 @@ func main() {
 		input, _ := reader.ReadString('\n')
 		input = strings.Replace(input, "\n", "", 1)
 		input = strings.Replace(input, "\r", "", 1)
-		if input == "X" {
+		if strings.ToUpper(input) == "X" {
 			break
 		} else if input == "10+" {
 			plus10Menu(&app)
@@ -320,7 +320,7 @@ func plus10Menu(app *DataBase) {
 		input, _ := reader.ReadString('\n')
 		input = strings.Replace(input, "\n", "", 1)
 		input = strings.Replace(input, "\r", "", 1)
-		if input == "N" {
+		if strings.ToUpper(input) == "N" {
 			return
 		}
 		inputSplit := strings.Split(input, "|")
