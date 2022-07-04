@@ -1,7 +1,7 @@
 package MerkleTree
 
 import (
-	"NASP/SkipList"
+	"NASP/DataStructures/SkipList"
 	"crypto/sha1"
 	"encoding/hex"
 	//"fmt"

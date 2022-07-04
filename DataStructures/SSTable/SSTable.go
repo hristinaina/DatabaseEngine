@@ -1,9 +1,9 @@
 package SSTable
 
 import (
-	"NASP/BloomFilter"
-	"NASP/MerkleTree"
-	"NASP/SkipList"
+	"NASP/DataStructures/BloomFilter"
+	"NASP/DataStructures/MerkleTree"
+	"NASP/DataStructures/SkipList"
 	"encoding/binary"
 	"hash/crc32"
 	"io"
