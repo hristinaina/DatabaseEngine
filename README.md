@@ -1,5 +1,5 @@
 # Database Engine
-Project for course Advanced Algorithms and Data Structures.
+Project for course **Advanced Algorithms and Data Structures** (III Semester).
 
 ## Team members
 - [Nada Zarić](https://github.com/nadazaric)
